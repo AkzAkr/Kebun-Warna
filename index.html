@@ -1,1 +1,1000 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Kebun Warna - Belajar Mencampur Warna</title>
+<style>
+  :root {
+    --sky-top: #bfeaf5;
+    --sky-mid: #d9f1f7;
+    --sky-bottom: #fff3da;
+    --soil: #8a5a3b;
+    --soil-dark: #6b4429;
+    --ink: #3a3226;
+    --card: #fffaf0;
+    --red: #ef5350;
+    --yellow: #ffd54f;
+    --blue: #42a5f5;
+    --orange: #ff9e57;
+    --green: #66bb6a;
+    --purple: #ab7ee0;
+    --shadow: rgba(58, 50, 38, 0.25);
+    --vh-safe: 100vh;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: 'Baloo 2', 'Comic Sans MS', system-ui, sans-serif;
+    touch-action: manipulation;
+    user-select: none;
+    background: var(--soil-dark);
+  }
+
+  #app {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    background: linear-gradient(to bottom,
+      var(--sky-top) 0%, var(--sky-mid) 45%, var(--sky-bottom) 72%,
+      var(--soil) 74%, var(--soil-dark) 100%);
+    overflow: hidden;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  /* ============ Ambient layer ============ */
+  .ambient { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+
+  .sun {
+    position: absolute;
+    top: clamp(10px, 4%, 40px);
+    right: clamp(10px, 6%, 60px);
+    width: clamp(50px, 11vw, 90px);
+    height: clamp(50px, 11vw, 90px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff3b0, #ffd54f 70%);
+    box-shadow: 0 0 40px 10px rgba(255, 213, 79, 0.55);
+    animation: pulse 4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.85;
+  }
+  .cloud::before, .cloud::after {
+    content: ''; position: absolute; background: white; border-radius: 50%;
+  }
+  .cloud1 { width: clamp(60px,16vw,95px); height: clamp(18px,5vw,28px); top: 7%; left: 6%; animation: drift 30s linear infinite; }
+  .cloud1::before { width: 45%; height: 160%; top: -75%; left: 10%; border-radius: 50%; }
+  .cloud1::after { width: 36%; height: 130%; top: -55%; left: 50%; border-radius: 50%; }
+  .cloud2 { width: clamp(45px,12vw,72px); height: clamp(14px,4vw,22px); top: 14%; left: 48%; animation: drift 38s linear infinite reverse; }
+  .cloud2::before { width: 48%; height: 160%; top: -70%; left: 8%; border-radius: 50%; }
+  .cloud2::after { width: 38%; height: 130%; top: -50%; left: 50%; border-radius: 50%; }
+  @keyframes drift { 0%{transform:translateX(-16px);} 50%{transform:translateX(16px);} 100%{transform:translateX(-16px);} }
+
+  .butterfly {
+    position: absolute;
+    font-size: clamp(16px, 3vw, 26px);
+    animation: fly 16s ease-in-out infinite;
+    filter: drop-shadow(0 2px 2px rgba(0,0,0,0.15));
+  }
+  .bf1 { top: 22%; left: 12%; animation-duration: 18s; }
+  .bf2 { top: 30%; left: 70%; animation-duration: 22s; animation-delay: -4s; }
+  @keyframes fly {
+    0%   { transform: translate(0,0) rotate(0deg) scaleX(1); }
+    20%  { transform: translate(40px,-18px) rotate(8deg) scaleX(1); }
+    40%  { transform: translate(70px,8px) rotate(-4deg) scaleX(-1); }
+    60%  { transform: translate(30px,26px) rotate(6deg) scaleX(-1); }
+    80%  { transform: translate(-20px,6px) rotate(-6deg) scaleX(1); }
+    100% { transform: translate(0,0) rotate(0deg) scaleX(1); }
+  }
+
+  /* ============ HUD ============ */
+  .hud {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+    padding: clamp(10px,2.5vw,16px) clamp(10px,3vw,20px) 0;
+  }
+  .title-badge {
+    background: var(--card);
+    border-radius: 18px;
+    padding: clamp(6px,1.5vw,9px) clamp(12px,3vw,18px);
+    box-shadow: 0 5px 0 var(--shadow);
+    font-size: clamp(0.95rem, 2.6vw, 1.3rem);
+    font-weight: 800;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .progress-wrap {
+    background: var(--card);
+    border-radius: 18px;
+    padding: clamp(6px,1.5vw,9px) clamp(10px,2.5vw,16px);
+    box-shadow: 0 5px 0 var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+  .progress-flowers {
+    display: flex;
+    gap: clamp(2px, 0.8vw, 5px);
+  }
+  .progress-flower {
+    font-size: clamp(0.9rem, 2.6vw, 1.25rem);
+    opacity: 0.25;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .progress-flower.filled {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  /* ============ Garden ============ */
+  .garden-zone {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0 clamp(6px, 2vw, 16px);
+    min-height: 0;
+  }
+  .garden {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(4px, 2vw, 18px);
+    width: min(100%, 640px);
+    align-items: end;
+  }
+  @media (max-width: 420px) {
+    .garden { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px 6px; }
+  }
+
+  .plot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.15s;
+    min-width: 0;
+  }
+  .plot:active { transform: scale(0.96); }
+  .plot.done { cursor: default; }
+
+  .target-ring {
+    width: clamp(34px, 9vw, 56px);
+    height: clamp(34px, 9vw, 56px);
+    border-radius: 50%;
+    border: 3px dashed #fff;
+    background: rgba(255,255,255,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: clamp(2px, 1vw, 6px);
+    font-size: clamp(0.85rem, 3.4vw, 1.5rem);
+    flex-shrink: 0;
+  }
+  .flower-pot {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1.15;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .stem {
+    position: absolute;
+    bottom: 20%;
+    width: clamp(3px, 0.9vw, 6px);
+    height: 40%;
+    background: #5a9e4d;
+    border-radius: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .leaf {
+    position: absolute;
+    bottom: 32%;
+    width: clamp(10px, 3vw, 18px);
+    height: clamp(6px, 1.8vw, 10px);
+    background: #5a9e4d;
+    border-radius: 0 100% 0 100%;
+    left: 50%;
+  }
+  .leaf-l { transform: translateX(calc(-100% + 1px)) rotate(10deg); }
+  .leaf-r { transform: translateX(-1px) rotate(-10deg) scaleX(-1); }
+  .flower-head {
+    position: absolute;
+    bottom: 48%;
+    width: clamp(34px, 9vw, 58px);
+    height: clamp(34px, 9vw, 58px);
+    left: 50%;
+    transform: translateX(-50%) scale(0.15) rotate(-30deg);
+    transition: transform 0.55s cubic-bezier(.34,1.56,.64,1), filter 0.4s;
+    filter: grayscale(1) brightness(1.5);
+  }
+  .flower-head.bloomed {
+    transform: translateX(-50%) scale(1) rotate(0deg);
+    filter: none;
+  }
+  .flower-head.bloomed.wiggle {
+    animation: wiggle 2.2s ease-in-out infinite;
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: translateX(-50%) rotate(0deg) scale(1); }
+    50% { transform: translateX(-50%) rotate(4deg) scale(1); }
+  }
+  .flower-svg { width: 100%; height: 100%; }
+  .pot-base {
+    position: absolute;
+    bottom: 0;
+    width: 68%;
+    height: 26%;
+    background: linear-gradient(to bottom, #c97b4a, #a85e34);
+    border-radius: 3px 3px 12px 12px;
+    box-shadow: inset 0 -5px 0 rgba(0,0,0,0.15);
+  }
+  .pot-base::before {
+    content: '';
+    position: absolute;
+    top: -4px; left: -6%;
+    width: 112%;
+    height: 7px;
+    background: #b8693c;
+    border-radius: 4px;
+  }
+  .plot-label {
+    margin-top: clamp(3px, 1vw, 8px);
+    background: var(--card);
+    padding: 2px clamp(6px, 2vw, 12px);
+    border-radius: 10px;
+    font-size: clamp(0.6rem, 2.2vw, 0.85rem);
+    font-weight: 700;
+    color: var(--ink);
+    box-shadow: 0 2px 0 var(--shadow);
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .checkmark {
+    position: absolute;
+    top: -4px;
+    right: 6%;
+    width: clamp(18px, 5vw, 28px);
+    height: clamp(18px, 5vw, 28px);
+    background: var(--green);
+    border-radius: 50%;
+    color: white;
+    font-size: clamp(0.6rem, 2.4vw, 1rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 0 var(--shadow);
+    opacity: 0;
+    transform: scale(0);
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 3;
+  }
+  .checkmark.show { opacity: 1; transform: scale(1); }
+
+  /* ============ Mascot bee ============ */
+  .mascot {
+    position: absolute;
+    z-index: 7;
+    font-size: clamp(28px, 7vw, 48px);
+    left: 50%;
+    bottom: clamp(110px, 22vh, 170px);
+    transform: translateX(-50%);
+    transition: left 0.6s ease, bottom 0.6s ease;
+    pointer-events: none;
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.2));
+  }
+  .mascot.bob { animation: bob 1.6s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(-10px);} }
+  .mascot.happy { animation: bee-happy 0.6s ease-in-out 2; }
+  @keyframes bee-happy {
+    0%,100% { transform: translateX(-50%) translateY(0) rotate(0deg) scale(1); }
+    25% { transform: translateX(-50%) translateY(-16px) rotate(-12deg) scale(1.15); }
+    75% { transform: translateX(-50%) translateY(-16px) rotate(12deg) scale(1.15); }
+  }
+  .mascot-bubble {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(6px) scale(0.7);
+    background: var(--card);
+    border-radius: 14px;
+    padding: 4px 10px;
+    font-size: clamp(0.6rem, 2vw, 0.78rem);
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+    box-shadow: 0 3px 0 var(--shadow);
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    margin-bottom: 6px;
+  }
+  .mascot-bubble.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+  /* ============ Mixing station ============ */
+  .mix-station {
+    position: relative;
+    z-index: 8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(8px, 3vw, 18px);
+    padding: clamp(8px, 2vh, 14px) 10px calc(clamp(8px, 2vh, 14px) + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.06));
+  }
+  .paint-can {
+    position: relative;
+    width: clamp(48px, 13vw, 68px);
+    height: clamp(48px, 13vw, 68px);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.2), 0 5px 14px rgba(0,0,0,0.2);
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+    touch-action: none;
+    flex-shrink: 0;
+  }
+  .paint-can::after {
+    content: '';
+    position: absolute;
+    top: 14%; left: 18%;
+    width: 30%; height: 22%;
+    background: rgba(255,255,255,0.55);
+    border-radius: 50%;
+    filter: blur(1px);
+  }
+  .paint-can:active { cursor: grabbing; transform: scale(1.1); }
+  .paint-can.dragging { opacity: 0.35; }
+  .can-red { background: radial-gradient(circle at 35% 30%, #ff8a80, var(--red)); }
+  .can-yellow { background: radial-gradient(circle at 35% 30%, #fff3a0, var(--yellow)); }
+  .can-blue { background: radial-gradient(circle at 35% 30%, #90caf9, var(--blue)); }
+  .can-label {
+    position: absolute;
+    bottom: -20px;
+    font-size: clamp(0.55rem, 1.8vw, 0.7rem);
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--card);
+    padding: 1px 8px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .mixing-pot {
+    width: clamp(58px, 16vw, 86px);
+    height: clamp(58px, 16vw, 86px);
+    border-radius: 50%;
+    border: 4px dashed #fff;
+    background: rgba(255,255,255,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(1.2rem, 5vw, 1.9rem);
+    color: var(--ink);
+    font-weight: 800;
+    position: relative;
+    transition: background 0.3s, transform 0.3s;
+    flex-shrink: 0;
+  }
+  .mixing-pot.glow {
+    box-shadow: 0 0 0 6px rgba(255,255,255,0.5);
+    animation: pot-pop 0.4s ease;
+  }
+  @keyframes pot-pop { 0%{transform:scale(1);} 50%{transform:scale(1.18);} 100%{transform:scale(1);} }
+  .mixing-pot .hint {
+    position: absolute;
+    bottom: -20px;
+    font-size: clamp(0.55rem, 1.8vw, 0.72rem);
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--card);
+    padding: 1px 8px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .drag-ghost {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+    border: 3px solid white;
+    box-shadow: 0 5px 14px rgba(0,0,0,0.3);
+  }
+
+  /* ============ Toast ============ */
+  .toast {
+    position: absolute;
+    top: 16%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-16px) scale(0.85);
+    background: var(--card);
+    padding: clamp(10px,2.5vw,16px) clamp(16px,4vw,28px);
+    border-radius: 20px;
+    font-size: clamp(0.85rem, 3.4vw, 1.25rem);
+    font-weight: 800;
+    color: var(--ink);
+    box-shadow: 0 7px 0 var(--shadow);
+    opacity: 0;
+    z-index: 50;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    text-align: center;
+    max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+
+  .confetti-piece {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    z-index: 60;
+    pointer-events: none;
+    border-radius: 2px;
+  }
+
+  /* ============ Win screen ============ */
+  .win-screen {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 250, 235, 0.97);
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: clamp(16px, 5vw, 30px);
+  }
+  .win-screen.show { display: flex; }
+  .win-screen h1 { font-size: clamp(1.4rem, 5.5vw, 2.2rem); color: var(--ink); margin: 0 0 6px; }
+  .win-screen p { color: var(--ink); font-size: clamp(0.9rem, 3.2vw, 1.1rem); margin: 0 0 22px; max-width: 480px; }
+  .win-emoji { font-size: clamp(2.6rem, 10vw, 4rem); margin-bottom: 8px; animation: bounce 1s ease-in-out infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-14px);} }
+  .restart-btn {
+    background: var(--green);
+    color: white;
+    border: none;
+    padding: clamp(12px,3vw,15px) clamp(26px,6vw,34px);
+    border-radius: 20px;
+    font-size: clamp(0.95rem, 3.4vw, 1.15rem);
+    font-weight: 800;
+    box-shadow: 0 6px 0 #4a9550;
+    cursor: pointer;
+  }
+  .restart-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #4a9550; }
+
+  /* ============ Intro overlay ============ */
+  .intro {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 250, 235, 0.98);
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: clamp(18px, 5vw, 30px);
+  }
+  .intro h1 { font-size: clamp(1.3rem, 5.2vw, 1.9rem); color: var(--ink); margin: 0 0 10px; }
+  .intro p { font-size: clamp(0.85rem, 3vw, 1.05rem); color: var(--ink); max-width: 420px; line-height: 1.55; margin: 0 0 22px; }
+  .intro .emoji-row { font-size: clamp(1.8rem, 7vw, 2.4rem); margin-bottom: 14px; }
+  .start-btn {
+    background: var(--orange);
+    color: white;
+    border: none;
+    padding: clamp(13px,3.4vw,16px) clamp(28px,7vw,36px);
+    border-radius: 22px;
+    font-size: clamp(1rem, 3.6vw, 1.2rem);
+    font-weight: 800;
+    box-shadow: 0 6px 0 #c97334;
+    cursor: pointer;
+  }
+  .start-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #c97334; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sun, .cloud1, .cloud2, .win-emoji, .butterfly, .mascot.bob { animation: none !important; }
+    .flower-head, .checkmark, .toast { transition: none !important; }
+  }
+
+  /* Short / landscape phones: shrink garden zone, keep mix station usable */
+  @media (max-height: 480px) {
+    .target-ring { display: none; }
+    .mascot { display: none; }
+    .plot-label { font-size: 0.6rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="ambient" aria-hidden="true">
+    <div class="sun"></div>
+    <div class="cloud cloud1"></div>
+    <div class="cloud cloud2"></div>
+    <div class="butterfly bf1">🦋</div>
+    <div class="butterfly bf2">🦋</div>
+  </div>
+
+  <div class="hud">
+    <div class="title-badge">🌼 Kebun Warna</div>
+    <div class="progress-wrap">
+      <div class="progress-flowers" id="progressFlowers"></div>
+    </div>
+  </div>
+
+  <div class="garden-zone">
+    <div class="garden" id="garden"></div>
+  </div>
+
+  <div class="mix-station" id="mixStation">
+    <div class="mascot bob" id="mascot">
+      <div class="mascot-bubble" id="mascotBubble">Ayo coba!</div>
+      🐝
+    </div>
+    <div class="paint-can can-red" data-color="red" id="canRed">💧<span class="can-label">Merah</span></div>
+    <div class="paint-can can-yellow" data-color="yellow" id="canYellow">💧<span class="can-label">Kuning</span></div>
+    <div class="mixing-pot" id="mixingPot">
+      <span id="mixingPotText">?</span>
+      <span class="hint">Pot Campur</span>
+    </div>
+    <div class="paint-can can-blue" data-color="blue" id="canBlue">💧<span class="can-label">Biru</span></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="win-screen" id="winScreen">
+    <div class="win-emoji">🌈</div>
+    <h1>Hebat! Kebun Warna Mekar Semua!</h1>
+    <p>Kamu berhasil membuat semua warna dengan benar. Kamu jago mencampur warna!</p>
+    <button class="restart-btn" id="restartBtn">Main Lagi</button>
+  </div>
+
+  <div class="intro" id="introScreen">
+    <div class="emoji-row">🌸🪴🌻</div>
+    <h1>Selamat Datang di Kebun Warna!</h1>
+    <p>Bantu bunga-bunga ini mekar! Seret cat warna ke <b>Pot Campur</b>, lalu sentuh bunga yang cocok dengan warna itu. Si lebah akan menemanimu!</p>
+    <button class="start-btn" id="startBtn">Mulai Bermain 🌱</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Audio (WebAudio synth) ----------
+  let audioCtx = null;
+  function getCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+  function playTone(freq, duration, type, gainVal, delay) {
+    try {
+      const ctx = getCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      gain.gain.value = gainVal || 0.15;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const startAt = ctx.currentTime + (delay || 0);
+      osc.start(startAt);
+      gain.gain.setValueAtTime(gainVal || 0.15, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.001, startAt + duration);
+      osc.stop(startAt + duration + 0.02);
+    } catch (e) {}
+  }
+  function sfxPour() { playTone(440, 0.12, 'sine', 0.12, 0); playTone(520, 0.12, 'sine', 0.1, 0.05); }
+  function sfxMixSuccess() {
+    playTone(523.25, 0.15, 'triangle', 0.15, 0);
+    playTone(659.25, 0.15, 'triangle', 0.15, 0.1);
+    playTone(783.99, 0.2, 'triangle', 0.15, 0.2);
+  }
+  function sfxCorrect() {
+    playTone(659.25, 0.12, 'triangle', 0.18, 0);
+    playTone(783.99, 0.12, 'triangle', 0.18, 0.1);
+    playTone(987.77, 0.18, 'triangle', 0.18, 0.2);
+  }
+  function sfxWrong() { playTone(220, 0.18, 'sawtooth', 0.1, 0); playTone(180, 0.22, 'sawtooth', 0.08, 0.1); }
+  function sfxWin() {
+    [523.25, 587.33, 659.25, 783.99, 987.77].forEach((f, i) => playTone(f, 0.25, 'triangle', 0.15, i * 0.12));
+  }
+
+  // ---------- Data ----------
+  const PRIMARY = {
+    red:    { hex: '#ef5350', label: 'Merah' },
+    yellow: { hex: '#ffd54f', label: 'Kuning' },
+    blue:   { hex: '#42a5f5', label: 'Biru' }
+  };
+  const MIX_RULES = {
+    'red+yellow':  { key: 'orange', hex: '#ff9e57', label: 'Oranye', emoji: '🧡' },
+    'yellow+red':  { key: 'orange', hex: '#ff9e57', label: 'Oranye', emoji: '🧡' },
+    'blue+yellow': { key: 'green',  hex: '#66bb6a', label: 'Hijau',  emoji: '💚' },
+    'yellow+blue': { key: 'green',  hex: '#66bb6a', label: 'Hijau',  emoji: '💚' },
+    'red+blue':    { key: 'purple', hex: '#ab7ee0', label: 'Ungu',   emoji: '💜' },
+    'blue+red':    { key: 'purple', hex: '#ab7ee0', label: 'Ungu',   emoji: '💜' }
+  };
+  const TARGETS = [
+    { key: 'orange', hex: '#ff9e57', label: 'Oranye', emoji: '🧡' },
+    { key: 'green',  hex: '#66bb6a', label: 'Hijau',  emoji: '💚' },
+    { key: 'purple', hex: '#ab7ee0', label: 'Ungu',   emoji: '💜' },
+    { key: 'red',    hex: '#ef5350', label: 'Merah',  emoji: '❤️' },
+    { key: 'yellow', hex: '#ffd54f', label: 'Kuning', emoji: '💛' },
+    { key: 'blue',   hex: '#42a5f5', label: 'Biru',   emoji: '💙' }
+  ];
+  const MASCOT_HINTS = [
+    'Ayo coba!', 'Seret cat ke pot!', 'Kamu pasti bisa!', 'Semangat ya!', 'Lihat pot campur!'
+  ];
+
+  function flowerSVG(hex) {
+    return `<svg class="flower-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <g>
+        ${[0,60,120,180,240,300].map(angle => `
+          <ellipse cx="50" cy="28" rx="14" ry="20" fill="${hex}"
+            transform="rotate(${angle} 50 50)" stroke="white" stroke-width="2"/>
+        `).join('')}
+        <circle cx="50" cy="50" r="13" fill="#fff3b0" stroke="white" stroke-width="2"/>
+      </g>
+    </svg>`;
+  }
+
+  let state = { mixA: null, mixB: null, currentMixResult: null, stars: 0, plots: [], finished: false };
+
+  const gardenEl = document.getElementById('garden');
+  const mixingPotEl = document.getElementById('mixingPot');
+  const mixingPotText = document.getElementById('mixingPotText');
+  const toastEl = document.getElementById('toast');
+  const progressFlowersEl = document.getElementById('progressFlowers');
+  const winScreenEl = document.getElementById('winScreen');
+  const mascotEl = document.getElementById('mascot');
+  const mascotBubbleEl = document.getElementById('mascotBubble');
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function buildProgress() {
+    progressFlowersEl.innerHTML = TARGETS.map((_, i) =>
+      `<span class="progress-flower" id="prog-${i}">🌸</span>`
+    ).join('');
+  }
+
+  function updateProgress() {
+    for (let i = 0; i < TARGETS.length; i++) {
+      const el = document.getElementById(`prog-${i}`);
+      el.classList.toggle('filled', i < state.stars);
+    }
+  }
+
+  function buildGarden() {
+    gardenEl.innerHTML = '';
+    state.plots = shuffle(TARGETS).map(t => ({ ...t, done: false }));
+
+    state.plots.forEach((plot, idx) => {
+      const plotEl = document.createElement('div');
+      plotEl.className = 'plot';
+      plotEl.dataset.index = idx;
+      plotEl.innerHTML = `
+        <div class="target-ring" style="border-color:${plot.hex}"><span>${plot.emoji}</span></div>
+        <div class="flower-pot">
+          <div class="checkmark" id="check-${idx}">✓</div>
+          <div class="flower-head" id="flower-${idx}">${flowerSVG(plot.hex)}</div>
+          <div class="leaf leaf-l"></div>
+          <div class="leaf leaf-r"></div>
+          <div class="stem"></div>
+          <div class="pot-base"></div>
+        </div>
+        <div class="plot-label">${plot.label}</div>
+      `;
+      plotEl.addEventListener('click', () => onPlotTap(idx));
+      gardenEl.appendChild(plotEl);
+    });
+  }
+
+  function showToast(msg, ms) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastEl._timer);
+    toastEl._timer = setTimeout(() => toastEl.classList.remove('show'), ms || 1400);
+  }
+
+  let mascotIdleTimer = null;
+  function showMascotHint() {
+    const msg = MASCOT_HINTS[Math.floor(Math.random() * MASCOT_HINTS.length)];
+    mascotBubbleEl.textContent = msg;
+    mascotBubbleEl.classList.add('show');
+    setTimeout(() => mascotBubbleEl.classList.remove('show'), 2200);
+  }
+  function scheduleMascotIdle() {
+    clearTimeout(mascotIdleTimer);
+    mascotIdleTimer = setTimeout(() => {
+      if (!state.finished) showMascotHint();
+      scheduleMascotIdle();
+    }, 9000);
+  }
+  function mascotCelebrate() {
+    mascotEl.classList.remove('bob');
+    mascotEl.classList.add('happy');
+    setTimeout(() => { mascotEl.classList.remove('happy'); mascotEl.classList.add('bob'); }, 650);
+  }
+
+  function resetMixingPot() {
+    state.mixA = null;
+    state.mixB = null;
+    state.currentMixResult = null;
+    mixingPotEl.style.background = 'rgba(255,255,255,0.4)';
+    mixingPotText.textContent = '?';
+    mixingPotEl.classList.remove('glow');
+  }
+
+  function evaluateMix() {
+    if (state.mixA && state.mixB) {
+      const key = `${state.mixA}+${state.mixB}`;
+      if (state.mixA === state.mixB) {
+        const c = PRIMARY[state.mixA];
+        state.currentMixResult = { key: state.mixA, hex: c.hex, label: c.label, emoji: '' };
+        mixingPotEl.style.background = c.hex;
+        mixingPotText.textContent = '';
+        showToast(`Itu masih warna ${c.label}, coba dua warna berbeda ya!`, 1800);
+      } else {
+        const result = MIX_RULES[key];
+        state.currentMixResult = result;
+        mixingPotEl.style.background = result.hex;
+        mixingPotText.textContent = result.emoji;
+        mixingPotEl.classList.add('glow');
+        sfxMixSuccess();
+        showToast(`✨ ${PRIMARY[state.mixA].label} + ${PRIMARY[state.mixB].label} = ${result.label}!`, 1800);
+      }
+    }
+  }
+
+  function onCanDrop(color) {
+    if (!state.mixA) {
+      state.mixA = color;
+      mixingPotEl.style.background = PRIMARY[color].hex;
+      sfxPour();
+    } else if (!state.mixB) {
+      state.mixB = color;
+      sfxPour();
+      evaluateMix();
+    } else {
+      resetMixingPot();
+      state.mixA = color;
+      mixingPotEl.style.background = PRIMARY[color].hex;
+      sfxPour();
+    }
+  }
+
+  function onPlotTap(idx) {
+    const plot = state.plots[idx];
+    if (plot.done) return;
+
+    if (!state.currentMixResult) {
+      if (state.mixA && !state.mixB) {
+        if (plot.key === state.mixA) {
+          bloomFlower(idx);
+          sfxCorrect();
+          showToast(`Yes! Bunga ${plot.label} mekar! 🌼`, 1500);
+        } else {
+          sfxWrong();
+          showToast('Belum pas, coba warna lain ya!', 1300);
+          shakePlot(idx);
+        }
+      } else {
+        showToast('Seret dulu cat ke Pot Campur ya! 🎨', 1400);
+      }
+      return;
+    }
+
+    if (plot.key === state.currentMixResult.key) {
+      bloomFlower(idx);
+      sfxCorrect();
+      showToast(`Yes! Bunga ${plot.label} mekar! 🌼`, 1500);
+      resetMixingPot();
+    } else {
+      sfxWrong();
+      showToast('Belum pas, coba lagi ya!', 1300);
+      shakePlot(idx);
+    }
+  }
+
+  function shakePlot(idx) {
+    const plotEl = gardenEl.children[idx];
+    plotEl.style.transition = 'transform 0.1s';
+    plotEl.style.transform = 'translateX(-6px)';
+    setTimeout(() => { plotEl.style.transform = 'translateX(6px)'; }, 100);
+    setTimeout(() => { plotEl.style.transform = ''; }, 200);
+  }
+
+  function bloomFlower(idx) {
+    const plot = state.plots[idx];
+    plot.done = true;
+    const flowerEl = document.getElementById(`flower-${idx}`);
+    const checkEl = document.getElementById(`check-${idx}`);
+    flowerEl.classList.add('bloomed', 'wiggle');
+    checkEl.classList.add('show');
+    state.stars++;
+    updateProgress();
+    spawnConfetti(idx);
+    mascotCelebrate();
+
+    if (state.stars >= TARGETS.length) {
+      state.finished = true;
+      clearTimeout(mascotIdleTimer);
+      setTimeout(() => { sfxWin(); winScreenEl.classList.add('show'); }, 700);
+    }
+  }
+
+  function spawnConfetti(idx) {
+    const plotEl = gardenEl.children[idx];
+    const rect = plotEl.getBoundingClientRect();
+    const colors = ['#ef5350', '#ffd54f', '#42a5f5', '#ff9e57', '#66bb6a', '#ab7ee0'];
+    for (let i = 0; i < 14; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.left = (rect.left + rect.width / 2) + 'px';
+      piece.style.top = (rect.top + rect.height / 3) + 'px';
+      document.getElementById('app').appendChild(piece);
+
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 35 + Math.random() * 60;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist - 26;
+      const rot = Math.random() * 360;
+
+      piece.animate([
+        { transform: 'translate(0,0) rotate(0deg)', opacity: 1 },
+        { transform: `translate(${dx}px, ${dy + 110}px) rotate(${rot}deg)`, opacity: 0 }
+      ], { duration: 900 + Math.random() * 400, easing: 'cubic-bezier(.25,.46,.45,.94)' });
+
+      setTimeout(() => piece.remove(), 1400);
+    }
+  }
+
+  // ---------- Drag & drop (mouse + touch), scaled to element size ----------
+  function setupDraggable(canEl, color) {
+    let ghost = null;
+    let startX, startY;
+
+    function onStart(clientX, clientY, e) {
+      e.preventDefault();
+      canEl.classList.add('dragging');
+      const size = canEl.getBoundingClientRect().width;
+      ghost = document.createElement('div');
+      ghost.className = 'drag-ghost';
+      ghost.style.width = size + 'px';
+      ghost.style.height = size + 'px';
+      ghost.style.background = PRIMARY[color].hex;
+      document.body.appendChild(ghost);
+      moveGhost(clientX, clientY, size);
+    }
+    function moveGhost(clientX, clientY, size) {
+      if (!ghost) return;
+      const s = size || ghost.offsetWidth;
+      ghost.style.left = (clientX - s / 2) + 'px';
+      ghost.style.top = (clientY - s / 2) + 'px';
+    }
+    function onMove(clientX, clientY) { if (ghost) moveGhost(clientX, clientY); }
+
+    function onEnd(clientX, clientY) {
+      canEl.classList.remove('dragging');
+      if (ghost) { ghost.remove(); ghost = null; }
+
+      const potRect = mixingPotEl.getBoundingClientRect();
+      const pad = potRect.width * 0.25;
+      const inPot = clientX >= potRect.left - pad && clientX <= potRect.right + pad &&
+                    clientY >= potRect.top - pad && clientY <= potRect.bottom + pad;
+
+      if (inPot) {
+        onCanDrop(color);
+      } else {
+        const dist = Math.hypot(clientX - startX, clientY - startY);
+        if (dist < 10) onCanDrop(color); // tap-to-pour fallback
+      }
+    }
+
+    canEl.addEventListener('mousedown', (e) => {
+      startX = e.clientX; startY = e.clientY;
+      onStart(e.clientX, e.clientY, e);
+      function mm(ev) { onMove(ev.clientX, ev.clientY); }
+      function mu(ev) {
+        onEnd(ev.clientX, ev.clientY);
+        document.removeEventListener('mousemove', mm);
+        document.removeEventListener('mouseup', mu);
+      }
+      document.addEventListener('mousemove', mm);
+      document.addEventListener('mouseup', mu);
+    });
+
+    canEl.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      startX = t.clientX; startY = t.clientY;
+      onStart(t.clientX, t.clientY, e);
+    }, { passive: false });
+
+    canEl.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      onMove(t.clientX, t.clientY);
+    }, { passive: false });
+
+    canEl.addEventListener('touchend', (e) => {
+      const t = e.changedTouches[0];
+      onEnd(t.clientX, t.clientY);
+    });
+  }
+
+  setupDraggable(document.getElementById('canRed'), 'red');
+  setupDraggable(document.getElementById('canYellow'), 'yellow');
+  setupDraggable(document.getElementById('canBlue'), 'blue');
+
+  mixingPotEl.addEventListener('click', () => {
+    if (state.mixA && !state.mixB) {
+      showToast('Seret satu warna lagi untuk mencampur!', 1400);
+    } else if (!state.mixA) {
+      showToast('Seret cat warna ke sini! 🎨', 1300);
+    } else {
+      resetMixingPot();
+      showToast('Pot dikosongkan, mulai campur lagi!', 1200);
+    }
+  });
+
+  function resetGame() {
+    state = { mixA: null, mixB: null, currentMixResult: null, stars: 0, plots: [], finished: false };
+    resetMixingPot();
+    buildGarden();
+    updateProgress();
+    winScreenEl.classList.remove('show');
+    scheduleMascotIdle();
+  }
+
+  document.getElementById('restartBtn').addEventListener('click', resetGame);
+  document.getElementById('startBtn').addEventListener('click', () => {
+    document.getElementById('introScreen').style.display = 'none';
+    getCtx();
+    scheduleMascotIdle();
+  });
+
+  buildProgress();
+  buildGarden();
+  updateProgress();
+})();
+</script>
+</body>
+</html>
 
